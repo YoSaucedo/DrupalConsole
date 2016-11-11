@@ -6,8 +6,14 @@
 
 namespace Drupal\Console\Test\Command\Generate;
 
+use Drupal\Console\Test\Builders\a as an;
 use Drupal\Console\Command\Generate\ControllerCommand;
 use Symfony\Component\Console\Tester\CommandTester;
+use Drupal\Core\Routing\RouteProvider;
+use Drupal\Console\Utils\StringConverter;
+use Drupal\Console\Utils\Validator;
+use Drupal\Console\Utils\ChainQueue;
+use Drupal\Core\Database\Connection;
 use Drupal\Console\Test\DataProvider\ControllerDataProviderTrait;
 
 class ControllerCommandTest extends GenerateCommandTest
@@ -32,9 +38,17 @@ class ControllerCommandTest extends GenerateCommandTest
         $test,
         $services
     ) {
-        $command = new ControllerCommand($this->getHelperSet());
-        $command->setHelperSet($this->getHelperSet());
-        $command->setGenerator($this->getGenerator());
+        $manager = an::extensionManager();
+        $generator = an::ControllerGenerator();
+        $con = an::Connection();
+        $command = new ControllerCommand(
+          $manager,
+          $generator->reveal(),
+          new StringConverter(),
+          new Validator($manager),
+          new RouteProvider($con,),
+          new ChainQueue()
+        );
 
         $commandTester = new CommandTester($command);
 
@@ -50,14 +64,5 @@ class ControllerCommandTest extends GenerateCommandTest
         );
 
         $this->assertEquals(0, $code);
-    }
-
-    private function getGenerator()
-    {
-        return $this
-            ->getMockBuilder('Drupal\Console\Generator\ControllerGenerator')
-            ->disableOriginalConstructor()
-            ->setMethods(['generate'])
-            ->getMock();
     }
 }
