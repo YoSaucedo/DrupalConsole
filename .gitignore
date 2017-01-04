@@ -28,3 +28,11 @@ autoload.local.php
 # Drupal
 /core
 /nbproject/
+
+.idea/vcs.xml
+
+.idea/DrupalConsole.iml
+
+.idea/modules.xml
+
+.idea/workspace.xml
