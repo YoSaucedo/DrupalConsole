@@ -1,71 +1,52 @@
 <?php
 
-use Drupal\Console\Utils\ConfigurationManager;
-use Drupal\Console\Utils\ArgvInputReader;
+use DrupalFinder\DrupalFinder;
+use Drupal\Console\Core\Utils\ArgvInputReader;
 use Drupal\Console\Bootstrap\Drupal;
 use Drupal\Console\Application;
 
 set_time_limit(0);
-$appRoot = getcwd() . '/';
-$root = $appRoot;
 
-$globalAutoLoadFile = $appRoot.'/autoload.php';
-$projectAutoLoadFile = $appRoot.'/vendor/autoload.php';
-
-if (file_exists($globalAutoLoadFile)) {
-    $autoload = include_once $globalAutoLoadFile;
-} elseif (file_exists($projectAutoLoadFile)) {
-    $autoload = include_once $projectAutoLoadFile;
+if (file_exists(__DIR__ . '/../autoload.local.php')) {
+    include_once __DIR__ . '/../autoload.local.php';
 } else {
-    echo PHP_EOL .
-        ' DrupalConsole must be executed within a Drupal Site.'.PHP_EOL.
-        ' Try changing to a Drupal site directory and download it by executing:'. PHP_EOL .
-        ' composer require drupal/console:~1.0 --prefer-dist --optimize-autoloader'. PHP_EOL .
-        ' composer update drupal/console --with-dependencies'. PHP_EOL .
-        PHP_EOL;
-
-    exit(1);
+    $autoloaders = [
+         __DIR__ . '/../../../autoload.php',
+         __DIR__ . '/../vendor/autoload.php'
+     ];
 }
 
-if (!file_exists($appRoot.'composer.json')) {
-    $root = realpath($appRoot . '../') . '/';
-}
-
-if (!file_exists($root.'composer.json')) {
-    echo ' No composer.json file found at:' . PHP_EOL .
-         ' '. $root . PHP_EOL .
-         ' you should try run this command,' . PHP_EOL .
-         ' from the Drupal root directory.' . PHP_EOL;
-
-    exit(1);
-}
-
-$argvInputReader = new ArgvInputReader();
-$configurationManager = new ConfigurationManager();
-$configuration = $configurationManager
-    ->loadConfigurationFromDirectory($root);
-if ($options = $configuration->get('application.options') ?: []) {
-    $argvInputReader->setOptionsFromConfiguration($options);
-}
-$argvInputReader->setOptionsAsArgv();
-
-if ($root === $appRoot && $argvInputReader->get('root')) {
-    $appRoot = $argvInputReader->get('root');
-    if (is_dir($appRoot)) {
-        chdir($appRoot);
-    }
-    else {
-        $appRoot = $root;
+foreach ($autoloaders as $file) {
+    if (file_exists($file)) {
+        $autoloader = $file;
+        break;
     }
 }
 
-$drupal = new Drupal($autoload, $root, $appRoot);
+if (isset($autoloader)) {
+    $autoload = include_once $autoloader;
+} else {
+    echo ' You must set up the project dependencies using `composer install`' . PHP_EOL;
+    exit(1);
+}
+
+$drupalFinder = new DrupalFinder();
+$drupalFinder->locateRoot(getcwd());
+$composerRoot = $drupalFinder->getComposerRoot();
+$drupalRoot = $drupalFinder->getDrupalRoot();
+
+if (!$drupalRoot || !$composerRoot) {
+    echo ' DrupalConsole must be executed within a Drupal Site.'.PHP_EOL;
+    exit(1);
+}
+
+chdir($drupalRoot);
+
+$drupal = new Drupal($autoload, $composerRoot, $drupalRoot);
 $container = $drupal->boot();
 
 if (!$container) {
-    echo ' In order to list all of the available commands you should try: ' . PHP_EOL .
-         ' Copy config files: drupal init ' . PHP_EOL .
-         ' Install Drupal site: drupal site:install ' . PHP_EOL;
+    echo ' Something goes wrong. Drupal can not be bootstrapped.';
 
     exit(1);
 }
@@ -75,6 +56,7 @@ $configuration = $container->get('console.configuration_manager')
 
 $translator = $container->get('console.translator_manager');
 
+$argvInputReader = new ArgvInputReader();
 if ($options = $configuration->get('application.options') ?: []) {
     $argvInputReader->setOptionsFromConfiguration($options);
 }

@@ -6,6 +6,7 @@ use Drupal\Console\Utils\Site;
 
 /**
  * Class ExtensionManager
+ *
  * @package Drupal\Console
  */
 class Manager
@@ -36,6 +37,7 @@ class Manager
 
     /**
      * ExtensionManager constructor.
+     *
      * @param Site   $site
      * @param string $appRoot
      */
@@ -284,11 +286,11 @@ class Manager
     }
 
     /**
-     * @param string $testType
+     * @param string   $testType
      * @param $fullPath
      * @return string
      */
-    public function getTestPath( $testType, $fullPath = false)
+    public function getTestPath($testType, $fullPath = false)
     {
         return $this->getPath($fullPath) . '/Tests/' . $testType;
     }

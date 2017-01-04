@@ -4,8 +4,8 @@ namespace Drupal\Console\Bootstrap;
 
 use Doctrine\Common\Annotations\AnnotationRegistry;
 use Symfony\Component\HttpFoundation\Request;
-use Drupal\Console\Utils\ArgvInputReader;
-use Drupal\Console\Utils\Logger;
+use Drupal\Console\Core\Utils\ArgvInputReader;
+use Drupal\Console\Core\Bootstrap\DrupalConsoleCore;
 
 class Drupal
 {
@@ -15,6 +15,7 @@ class Drupal
 
     /**
      * Drupal constructor.
+     *
      * @param $autoload
      * @param $root
      * @param $appRoot
@@ -28,33 +29,33 @@ class Drupal
 
     public function boot()
     {
-        $logger = new Logger($this->root);
         if (!class_exists('Drupal\Core\DrupalKernel')) {
-            $logger->writeln('Class Drupal\Core\DrupalKernel not found.');
+            echo 'Class Drupal\Core\DrupalKernel do not exists.' . PHP_EOL;
             $drupal = new DrupalConsoleCore($this->root, $this->appRoot);
-            $container = $drupal->boot();
-            $container->set(
-                'console.logger',
-                $logger
-            );
-            return $container;
+            return $drupal->boot();
         }
 
         try {
-            $argvInputReader = new ArgvInputReader();
-            if ($argvInputReader->get('uri')) {
-              $uri = $argvInputReader->get('uri');
-              if (substr($uri, -1) != '/') {
-                $uri .= '/';
-              }
-              $uri .= 'index.php';
-              $request = Request::create($uri, 'GET', array()  , array(), array(), array('SCRIPT_NAME' => $this->appRoot . '/index.php'));
-            }
-            else {
-              $request = Request::createFromGlobals();
+            // Add support for Acquia Dev Desktop sites on Mac OS X
+            // @TODO: Check if this condition works in Windows
+            $devDesktopSettingsDir = getenv('HOME') . "/.acquia/DevDesktop/DrupalSettings";
+            if (file_exists($devDesktopSettingsDir)) {
+                $_SERVER['DEVDESKTOP_DRUPAL_SETTINGS_DIR'] = $devDesktopSettingsDir;
             }
 
-            $drupalKernel = DrupalKernel::createFromRequest  (
+            $argvInputReader = new ArgvInputReader();
+            if ($argvInputReader->get('uri')) {
+                $uri = $argvInputReader->get('uri');
+                if (substr($uri, -1) != '/') {
+                    $uri .= '/';
+                }
+                $uri .= 'index.php';
+                $request = Request::create($uri, 'GET', [], [], [], ['SCRIPT_NAME' => $this->appRoot . '/index.php']);
+            } else {
+                $request = Request::createFromGlobals();
+            }
+
+            $drupalKernel = DrupalKernel::createFromRequest(
                 $request,
                 $this->autoload,
                 'prod',
@@ -76,11 +77,6 @@ class Drupal
             $container = $drupalKernel->getContainer();
 
             $container->set('console.root', $this->root);
-
-            $container->set(
-                'console.logger',
-                $logger
-            );
 
             AnnotationRegistry::registerLoader([$this->autoload, "loadClass"]);
 
@@ -104,13 +100,10 @@ class Drupal
 
             return $container;
         } catch (\Exception $e) {
-            $logger->writeln($e->getMessage());
+            echo $e->getMessage() . PHP_EOL;
             $drupal = new DrupalConsoleCore($this->root, $this->appRoot);
             $container = $drupal->boot();
-            $container->set(
-                'console.logger',
-                $logger
-            );
+            $container->set('class_loader', $this->autoload);
             return $container;
         }
     }
