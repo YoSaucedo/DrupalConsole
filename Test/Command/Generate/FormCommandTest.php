@@ -6,6 +6,7 @@
 
 namespace Drupal\Console\Test\Command\Generate;
 
+use Drupal\Console\Test\Builders\a as an;
 use Drupal\Console\Command\Generate\FormCommand;
 use Symfony\Component\Console\Tester\CommandTester;
 use Drupal\Console\Test\DataProvider\FormDataProviderTrait;
@@ -34,6 +35,8 @@ class FormCommandTest extends GenerateCommandTest
         $inputs,
         $routing_update
     ) {
+        $generator = an::formGenerator();
+        $manager = an::extensionManager();
         $command = $this->getGeneratorConfig();
         $command->setHelperSet($this->getHelperSet(null));
         $command->setGenerator($this->getGenerator());
@@ -43,7 +46,7 @@ class FormCommandTest extends GenerateCommandTest
         $code = $commandTester->execute(
             [
             '--module'              => $module,
-            '--class'          => $class_name,
+            '--class'               => $class_name,
             '--services'            => $services,
             '--inputs'              => $inputs,
             '--form-id'             => $form_id
