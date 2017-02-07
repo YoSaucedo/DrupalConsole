@@ -14,13 +14,32 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Command\Command;
 use Drupal\Console\Generator\AuthenticationProviderGenerator;
+<<<<<<< HEAD
 use Drupal\Console\Command\Shared\CommandTrait;
+=======
+use Drupal\Console\Command\Shared\ConfirmationTrait;
+use Drupal\Console\Core\Style\DrupalStyle;
+use Drupal\Console\Core\Command\Shared\CommandTrait;
+use Drupal\Console\Core\Utils\StringConverter;
+use Drupal\Console\Extension\Manager;
+>>>>>>> hechoendrupal/master
 
 class AuthenticationProviderCommand extends Command
 {
     use CommandTrait;
 
+<<<<<<< HEAD
     /** @var AuthenticationProviderGenerator */
+=======
+    /**
+ * @var Manager
+*/
+    protected $extensionManager;
+
+    /**
+ * @var AuthenticationProviderGenerator
+*/
+>>>>>>> hechoendrupal/master
     protected $generator;
 
     /** @var AuthenticationProviderQuestions */
@@ -31,6 +50,11 @@ class AuthenticationProviderCommand extends Command
 
     /**
      * AuthenticationProviderCommand constructor.
+<<<<<<< HEAD
+=======
+     *
+     * @param Manager                         $extensionManager
+>>>>>>> hechoendrupal/master
      * @param AuthenticationProviderGenerator $generator
      * @param AuthenticationProviderQuestions $questions
      * @param ConfirmGeneration $confirmation

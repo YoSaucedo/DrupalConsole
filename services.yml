@@ -1,6 +1,5 @@
-imports:
-    - { resource: 'services-drupal-install.yml' }
 services:
+<<<<<<< HEAD
   console.input:
     class: 'Symfony\Component\Console\Input\ArgvInput'
   console.ouput:
@@ -8,6 +7,10 @@ services:
   console.style:
     class: 'Drupal\Console\Style\DrupalStyle'
     arguments: ['@console.input', '@console.ouput']
+=======
+  console.root:
+    class: SplString
+>>>>>>> hechoendrupal/master
   console.redbean:
     class: RedBeanPHP\R
   console.validator:
@@ -36,3 +39,5 @@ services:
   console.annotation_validator:
     class: Drupal\Console\Utils\AnnotationValidator
     arguments: ['@console.annotation_command_reader', '@console.extension_manager']
+  console.extend_extension_manager:
+    class: Drupal\Console\Utils\ExtendExtensionManager
